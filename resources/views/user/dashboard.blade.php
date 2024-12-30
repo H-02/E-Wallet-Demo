@@ -9,12 +9,12 @@
             <div class="card mb-4 shadow-sm">
                 <div class="card-body">
                     <h3>Your Wallet Balance</h3>
-                    <p class="h4 text-primary">$<span id="wallet-balance">{{ Auth::user()->wallet_balance }}</span></p>
+                    <p class="h4 text-primary"><span id="wallet-balance">Loading...</span></p>
                     <button id="deposit-btn" class="btn btn-success mt-3">Deposit Funds</button>
                     <button id="withdraw-btn" class="btn btn-danger mt-3 ms-2">Withdraw Funds</button>
                 </div>
             </div>
-            
+
             <!-- Transaction History -->
             <div class="card">
                 <div class="card-header bg-light">
@@ -40,12 +40,17 @@
 </div>
 
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         // Function to load wallet balance and transaction history
         function loadWalletData() {
-            $.get('/api/user/wallet', function(data) {
-                $('#wallet-balance').text(data.wallet_balance);
-            }).fail(function() {
+            $.get('{{ route('user.wallet') }}', function (data) {
+                if (data.status === 'success') {
+                    // Display wallet balance with proper formatting
+                    $('#wallet-balance').text('$' + data.wallet_balance);
+                } else {
+                    alert('Error: Unable to fetch wallet balance.');
+                }
+            }).fail(function () {
                 alert('Error: Unable to fetch wallet balance.');
             });
 
@@ -54,22 +59,28 @@
 
         // Function to load transaction history
         function loadTransactions() {
-            $.get('/api/user/transactions', function(data) {
+            $.get('{{ route('user.wallet.transactions') }}', function (data) {
                 $('#transaction-table').html('');
                 if (data.transactions.length === 0) {
                     $('#transaction-table').append('<tr><td colspan="3" class="text-center">No transactions found.</td></tr>');
                 } else {
-                    data.transactions.forEach(function(transaction) {
+                    data.transactions.forEach(function (transaction) {
+                        // Display absolute value for transaction amount
+                        const absoluteAmount = Math.abs(transaction.amount).toFixed(2);
+
+                        const transactionDate = new Date(transaction.transaction_time);
+                        const formattedDate = transactionDate.toLocaleString();
+
                         $('#transaction-table').append(`
                             <tr>
-                                <td>${transaction.transaction_time}</td>
+                                <td>${formattedDate}</td>
                                 <td>${transaction.type}</td>
-                                <td>$${transaction.amount}</td>
+                                <td>$${absoluteAmount}</td>
                             </tr>
                         `);
                     });
                 }
-            }).fail(function() {
+            }).fail(function () {
                 alert('Error: Unable to fetch transaction history.');
             });
         }
@@ -78,21 +89,21 @@
         loadWalletData();
 
         // Handle deposit button click
-        $('#deposit-btn').click(function() {
+        $('#deposit-btn').click(function () {
             let amount = prompt('Enter the amount to deposit:');
             if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
                 $.ajax({
-                    url: '/api/user/deposit',
+                    url: '{{ route('user.wallet.deposit') }}',
                     method: 'POST',
                     data: {
                         amount: amount,
                         _token: '{{ csrf_token() }}'
                     },
-                    success: function(response) {
+                    success: function (response) {
                         alert('Deposit successful!');
                         loadWalletData();
                     },
-                    error: function(response) {
+                    error: function (response) {
                         alert('Error: ' + response.responseJSON.message);
                     }
                 });
@@ -102,21 +113,21 @@
         });
 
         // Handle withdraw button click
-        $('#withdraw-btn').click(function() {
+        $('#withdraw-btn').click(function () {
             let amount = prompt('Enter the amount to withdraw:');
             if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
                 $.ajax({
-                    url: '/api/user/withdraw',
+                    url: '{{ route('user.wallet.withdraw') }}',
                     method: 'POST',
                     data: {
                         amount: amount,
                         _token: '{{ csrf_token() }}'
                     },
-                    success: function(response) {
+                    success: function (response) {
                         alert('Withdrawal successful!');
                         loadWalletData();
                     },
-                    error: function(response) {
+                    error: function (response) {
                         alert('Error: ' + response.responseJSON.message);
                     }
                 });

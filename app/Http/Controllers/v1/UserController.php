@@ -30,7 +30,6 @@ class UserController extends ApiController
         }
     }
 
-    // Common method for processing deposit and withdrawal
     private function processTransaction($transactionType, $amount, $request)
     {
         try {
@@ -40,12 +39,10 @@ class UserController extends ApiController
                 return $this->response(401, [], "User not found");
             }
 
-            // Check if the transaction is a withdrawal and if the user has enough balance
             if ($transactionType === WalletConstants::TransactionType['WITHDRAW'] && $user->wallet_balance < $amount) {
                 return $this->response(400, [], "Insufficient balance");
             }
 
-            // Log the transaction
             Transaction::create([
                 'user_id' => $user->id,
                 'type' => $transactionType,
@@ -65,25 +62,21 @@ class UserController extends ApiController
         }
     }
 
-    // Deposit funds to the user's wallet
     public function depositFunds(UserRequest $request)
     {
         $amount = $request->validated()['amount'];
         return $this->processTransaction(WalletConstants::TransactionType['DEPOSIT'], $amount, $request);
     }
 
-    // Withdraw funds from the user's wallet
     public function withdrawFunds(UserRequest $request)
     {
         $amount = $request->amount;
         return $this->processTransaction(WalletConstants::TransactionType['WITHDRAW'], $amount, $request);
     }
 
-    // Get the user's transaction history
     public function getTransactionHistory(UserRequest $request)
     {
         try {
-            // Get user from the request using user_id
             $user = User::find($request->user_id);
 
             if (!$user) {
@@ -91,13 +84,6 @@ class UserController extends ApiController
                     'status' => 'error',
                     'message' => 'User not found'
                 ], 404);
-            }
-
-            // Ensure from_date and to_date are set properly based on the provided inputs
-            if ($request->date && !$request->from_date && !$request->to_date) {
-                $request->from_date = $request->to_date = $request->date;
-            } elseif (!$request->from_date && !$request->to_date) {
-                $request->from_date = $request->to_date = CommonHelper::current_date();
             }
 
             $from_date = $request->from_date ?? CommonHelper::current_date();
@@ -123,7 +109,6 @@ class UserController extends ApiController
             );
 
         } catch (\Exception $e) {
-            // Log the error
             Log::error("Error fetching transaction history: " . $e->getMessage());
 
             return $this->response(500, [], "An error occurred while fetching transaction history. Please try again later.");

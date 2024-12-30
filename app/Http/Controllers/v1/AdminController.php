@@ -15,16 +15,15 @@ class AdminController extends ApiController
 {
     public function getAllUsers(AdminRequest $request)
     {
-        $users = User::filter($request->all())->select('id', 'name', 'email', 'wallet_balance')->paginate($request->limit ?? 10);
+        $users = User::filter($request->all())->paginate($request->limit ?? 10);
         return $this->response(
             200,
-            ['transactions' => UserBalanceResource::collection($users)],
+            ['users' => UserBalanceResource::collection($users)],
             "Users fetched Successfully.",
             $this->getMetaData($users)
         );
     }
 
-    // Get a specific user's details including transaction history
     public function getUserDetails(AdminRequest $request, $id)
     {
         $user = User::findOrFail($id);
@@ -37,13 +36,11 @@ class AdminController extends ApiController
         );
     }
 
-    // Admin can deposit funds to any user
     public function depositToUser(AdminRequest $request, $id)
     {
         return $this->processTransaction(WalletConstants::TransactionType['DEPOSIT'], $request, $id);
     }
 
-    // Admin can withdraw funds from any user's wallet
     public function withdrawFromUser(Request $request, $id)
     {
         return $this->processTransaction(WalletConstants::TransactionType['WITHDRAW'], $request, $id);

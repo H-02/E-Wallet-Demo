@@ -30,7 +30,7 @@ class UserRequest extends BaseRequest
         } else if ($this->route()->getName() === "user.transactions") {
             return [
                 'from_date' => ['nullable', 'date', 'before_or_equal:to_date'],
-                'to_date' => ['nullable', 'date', 'after_or_equal:from_date'],
+                'to_date' => ['nullable', 'date', 'after_or_equal:from_date', 'required_with:from_date'],
                 'type' => ['nullable', Rule::in(WalletConstants::TransactionType)],
                 'limit' => ['nullable', 'integer', 'gt:0']
             ];

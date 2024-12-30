@@ -35,7 +35,7 @@ class AdminRequest extends BaseRequest
             $this->merge([
                 "id" => $this->route("id"),
             ]);
-            
+
             return [
                 "id" => [
                     "required",
@@ -48,7 +48,7 @@ class AdminRequest extends BaseRequest
             $this->merge([
                 "id" => $this->route("id"),
             ]);
-        
+
             return [
                 "id" => [
                     "required",
@@ -57,7 +57,7 @@ class AdminRequest extends BaseRequest
                     "exists:users,id,deleted_at,NULL",
                     function ($attribute, $value, $fail) {
                         $targetUser = User::find($value);
-        
+
                         if ($targetUser && $targetUser->role === 'ADMIN' && $targetUser->id !== $this->user()->id) {
                             $fail('You cannot perform transactions for another user with the role of ADMIN.');
                         }
@@ -65,7 +65,7 @@ class AdminRequest extends BaseRequest
                 ],
                 "amount" => 'required|numeric|gt:0',
             ];
-        }            
+        }
 
         return [
             //
